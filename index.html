@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дашборд качества звонков - Автошкола "Драйв"</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #6b7280;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #6b7280;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            background: none;
+            font-size: 16px;
+        }
+
+        .tab:hover {
+            background: #ebebeb;
+        }
+
+        .tab.active {
+            background: white;
+            color: #6b7280;
+            border-bottom: 3px solid #6b7280;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        /* Таблица */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        thead {
+            background: #6b7280;
+            color: white;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tbody tr {
+            transition: all 0.2s;
+        }
+
+        tbody tr:hover {
+            background: #f9f9f9;
+            transform: scale(1.01);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Цветовое кодирование баллов */
+        .score {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .score-high {
+            background: #4caf50;
+            color: white;
+        }
+
+        .score-medium {
+            background: #ff9800;
+            color: white;
+        }
+
+        .score-low {
+            background: #f44336;
+            color: white;
+        }
+
+        .score-na {
+            background: #9e9e9e;
+            color: white;
+        }
+
+        /* Селектор менеджера */
+        .manager-select {
+            padding: 15px 30px;
+            margin: 20px 0;
+            font-size: 16px;
+            border: 2px solid #6b7280;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            overflow-y: auto;
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 50px auto;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 900px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .modal-header h2 {
+            color: #6b7280;
+            font-size: 1.8em;
+        }
+
+        .close-btn {
+            font-size: 30px;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .criterion-block {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            border-left: 4px solid #6b7280;
+        }
+
+        .criterion-title {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .criterion-score {
+            font-size: 2em;
+            margin: 10px 0;
+        }
+
+        .criterion-text {
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+
+        .criterion-text strong {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            color: #6b7280;
+        }
+
+        ul {
+            margin-left: 20px;
+            margin-top: 5px;
+        }
+
+        li {
+            margin: 5px 0;
+            line-height: 1.4;
+        }
+
+        /* Статистика */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #6b7280;
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .stat-card h3 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .stat-card p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+            font-size: 1.2em;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 10px;
+            }
+
+            .modal-content {
+                margin: 20px;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Дашборд качества звонков</h1>
+            <p>Автошкола "Драйв" - Анализ работы менеджеров</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('overview')">Общий обзор</button>
+            <button class="tab" onclick="switchTab('detailed')">Детальный анализ</button>
+        </div>
+
+        <div class="content">
+            <!-- Общий обзор -->
+            <div id="overview" class="view active">
+                <div class="stats-grid" id="statsGrid"></div>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color score-high"></div>
+                        <span>Отлично (70-100%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color score-medium"></div>
+                        <span>Удовлетворительно (50-69%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color score-low"></div>
+                        <span>Требует улучшения (&lt;50%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color score-na"></div>
+                        <span>Н/Н (не применимо)</span>
+                    </div>
+                </div>
+
+                <table id="overviewTable">
+                    <thead>
+                        <tr>
+                            <th>Менеджер</th>
+                            <th>Общий балл</th>
+                            <th>Приветствие</th>
+                            <th>Обращение по имени</th>
+                            <th>Речь</th>
+                            <th>Настрой</th>
+                            <th>Инициатива</th>
+                            <th>Программирование</th>
+                            <th>Выявление потребностей</th>
+                            <th>Боль</th>
+                            <th>Презентация тарифов</th>
+                            <th>Презентация компании</th>
+                            <th>Кросс-продажи</th>
+                            <th>Возражения</th>
+                            <th>Закрытие</th>
+                            <th>Контакты</th>
+                        </tr>
+                    </thead>
+                    <tbody id="overviewTableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Детальный анализ -->
+            <div id="detailed" class="view">
+                <select class="manager-select" id="managerSelect" onchange="loadManagerDetails()">
+                    <option value="">Выберите менеджера...</option>
+                </select>
+
+                <div id="managerDetails"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для детального просмотра -->
+    <div id="criteriaModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle"></h2>
+                <span class="close-btn" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        let aggregatedData = null;
+        let detailedData = {};
+
+        // Загрузка данных при старте
+        async function loadData() {
+            try {
+                // Загружаем агрегированные данные
+                // Добавляем timestamp для обхода кэша
+                const cacheBuster = `?v=${Date.now()}`;
+                const response = await fetch(`results/aggregated_results.json${cacheBuster}`);
+                aggregatedData = await response.json();
+
+                // Загружаем детальные данные по каждому менеджеру
+                for (const manager of aggregatedData.managers) {
+                    const filename = `results/${manager.name.toLowerCase()}_analysis_full.json${cacheBuster}`;
+                    const detailResponse = await fetch(filename);
+                    detailedData[manager.name] = await detailResponse.json();
+                }
+
+                renderOverview();
+                populateManagerSelect();
+            } catch (error) {
+                console.error('Ошибка загрузки данных:', error);
+                document.getElementById('overviewTableBody').innerHTML =
+                    '<tr><td colspan="16" class="no-data">❌ Не удалось загрузить данные. Убедитесь, что файлы результатов находятся в папке results/</td></tr>';
+            }
+        }
+
+        // Переключение вкладок
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // Получение CSS класса для балла
+        function getScoreClass(score) {
+            if (score === 'н/н') return 'score-na';
+            if (score >= 70) return 'score-high';
+            if (score >= 50) return 'score-medium';
+            return 'score-low';
+        }
+
+        // Форматирование балла
+        function formatScore(score) {
+            return `<span class="score ${getScoreClass(score)}">${score}</span>`;
+        }
+
+        // Рендер общего обзора
+        function renderOverview() {
+            if (!aggregatedData) return;
+
+            // Статистика
+            const statsHtml = `
+                <div class="stat-card">
+                    <h3>${aggregatedData.total_calls}</h3>
+                    <p>Проанализировано звонков</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${aggregatedData.managers.length}</h3>
+                    <p>Менеджеров</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${Math.round(aggregatedData.managers.reduce((sum, m) => sum + m.overall_score, 0) / aggregatedData.managers.length)}</h3>
+                    <p>Средний балл</p>
+                </div>
+            `;
+            document.getElementById('statsGrid').innerHTML = statsHtml;
+
+            // Таблица
+            const tbody = document.getElementById('overviewTableBody');
+            tbody.innerHTML = '';
+
+            aggregatedData.managers.forEach(manager => {
+                const row = document.createElement('tr');
+                row.style.cursor = 'pointer';
+                row.onclick = () => showManagerModal(manager.name);
+
+                const scores = manager.criteria_scores;
+                row.innerHTML = `
+                    <td><strong>${manager.name}</strong></td>
+                    <td>${formatScore(manager.overall_score)}</td>
+                    <td>${formatScore(scores['Приветствие'] || 'н/н')}</td>
+                    <td>${formatScore(scores['Обращение по имени'] || 'н/н')}</td>
+                    <td>${formatScore(scores['Качество речи'] || 'н/н')}</td>
+                    <td>${formatScore(scores['Настрой'] || 'н/н')}</td>
+                    <td>${formatScore(scores['Инициатива'] || 'н/н')}</td>
+                    <td>${formatScore(scores['Программирование'] || 'н/н')}</td>
+                    <td>${formatScore(scores['Выявление потребностей'] || 'н/н')}</td>
+                    <td>${formatScore(scores['Боль'] || 'н/н')}</td>
+                    <td>${formatScore(scores['Презентация тарифов'] || 'н/н')}</td>
+                    <td>${formatScore(scores['Презентация компании'] || 'н/н')}</td>
+                    <td>${formatScore(scores['Кросс-продажи'] || 'н/н')}</td>
+                    <td>${formatScore(scores['Работа с возражениями'] || 'н/н')}</td>
+                    <td>${formatScore(scores['Закрытие сделки'] || 'н/н')}</td>
+                    <td>${formatScore(scores['Контакты'] || 'н/н')}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Заполнение селектора менеджеров
+        function populateManagerSelect() {
+            if (!aggregatedData) return;
+
+            const select = document.getElementById('managerSelect');
+            aggregatedData.managers.forEach(manager => {
+                const option = document.createElement('option');
+                option.value = manager.name;
+                option.textContent = manager.name;
+                select.appendChild(option);
+            });
+        }
+
+        // Загрузка деталей менеджера
+        function loadManagerDetails() {
+            const managerName = document.getElementById('managerSelect').value;
+            if (!managerName) {
+                document.getElementById('managerDetails').innerHTML = '';
+                return;
+            }
+
+            const data = detailedData[managerName];
+            if (!data) return;
+
+            let html = `<h2 style="color: #6b7280; margin: 20px 0;">Менеджер: ${data.manager}</h2>`;
+            html += `<div class="stats-grid">
+                <div class="stat-card">
+                    <h3>${data.overall_score}</h3>
+                    <p>Общий балл</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${data.scores_summary.valid_scores_count}</h3>
+                    <p>Оценено критериев</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${Math.round(data.analysis_duration_seconds)}с</h3>
+                    <p>Время анализа</p>
+                </div>
+            </div>`;
+
+            html += '<table><thead><tr><th>Критерий</th><th>Балл</th><th>Соответствие скрипту</th><th>Действия</th></tr></thead><tbody>';
+
+            const criteriaNames = {
+                'greeting': 'Приветствие',
+                'name_usage': 'Обращение по имени',
+                'speech_quality': 'Качество речи',
+                'attitude': 'Настрой',
+                'initiative': 'Инициатива',
+                'programming': 'Программирование',
+                'needs_identification': 'Выявление потребностей',
+                'pain_points': 'Боль',
+                'tariffs_presentation': 'Презентация тарифов',
+                'company_presentation': 'Презентация компании',
+                'cross_selling': 'Кросс-продажи',
+                'objection_handling': 'Работа с возражениями',
+                'deal_closing': 'Закрытие сделки',
+                'contact_establishment': 'Контакты'
+            };
+
+            for (const [key, name] of Object.entries(criteriaNames)) {
+                const criterion = data.criteria[key];
+                html += `
+                    <tr>
+                        <td><strong>${name}</strong></td>
+                        <td>${formatScore(criterion.score)}</td>
+                        <td>${formatScore(criterion.script_compliance)}</td>
+                        <td><button class="tab" onclick='showCriterionDetails("${managerName}", "${key}", "${name}")'>Подробнее</button></td>
+                    </tr>
+                `;
+            }
+
+            html += '</tbody></table>';
+            document.getElementById('managerDetails').innerHTML = html;
+        }
+
+        // Показать модальное окно с деталями менеджера
+        function showManagerModal(managerName) {
+            const data = detailedData[managerName];
+            if (!data) return;
+
+            document.getElementById('modalTitle').textContent = `Детальный анализ - ${managerName}`;
+
+            let html = `<div class="stats-grid">
+                <div class="stat-card">
+                    <h3>${data.overall_score}</h3>
+                    <p>Общий балл</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${data.scores_summary.valid_scores_count}/14</h3>
+                    <p>Оценено критериев</p>
+                </div>
+            </div>`;
+
+            const criteriaNames = {
+                'greeting': 'Приветствие',
+                'name_usage': 'Обращение по имени',
+                'speech_quality': 'Качество речи',
+                'attitude': 'Настрой',
+                'initiative': 'Инициатива',
+                'programming': 'Программирование',
+                'needs_identification': 'Выявление потребностей',
+                'pain_points': 'Боль',
+                'tariffs_presentation': 'Презентация тарифов',
+                'company_presentation': 'Презентация компании',
+                'cross_selling': 'Кросс-продажи',
+                'objection_handling': 'Работа с возражениями',
+                'deal_closing': 'Закрытие сделки',
+                'contact_establishment': 'Контакты'
+            };
+
+            for (const [key, name] of Object.entries(criteriaNames)) {
+                const criterion = data.criteria[key];
+                html += `
+                    <div class="criterion-block">
+                        <div class="criterion-title">${name}</div>
+                        <div class="criterion-score">${formatScore(criterion.score)}</div>
+                        <div class="criterion-text">
+                            <strong>Обоснование:</strong>
+                            <p>${criterion.justification}</p>
+
+                            ${criterion.positive_aspects.length > 0 ? `
+                                <strong>✅ Положительные аспекты:</strong>
+                                <ul>${criterion.positive_aspects.map(a => `<li>${a}</li>`).join('')}</ul>
+                            ` : ''}
+
+                            ${criterion.improvement_areas.length > 0 ? `
+                                <strong>⚠️ Что можно улучшить:</strong>
+                                <ul>${criterion.improvement_areas.map(a => `<li>${a}</li>`).join('')}</ul>
+                            ` : ''}
+
+                            <strong>Соответствие скрипту:</strong> ${formatScore(criterion.script_compliance)}
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('modalBody').innerHTML = html;
+            document.getElementById('criteriaModal').classList.add('show');
+        }
+
+        // Показать детали конкретного критерия
+        function showCriterionDetails(managerName, criterionKey, criterionName) {
+            const data = detailedData[managerName];
+            const criterion = data.criteria[criterionKey];
+
+            document.getElementById('modalTitle').textContent = `${managerName} - ${criterionName}`;
+
+            const html = `
+                <div class="criterion-block">
+                    <div class="criterion-score">${formatScore(criterion.score)}</div>
+                    <div class="criterion-text">
+                        <strong>Обоснование:</strong>
+                        <p>${criterion.justification}</p>
+
+                        ${criterion.positive_aspects.length > 0 ? `
+                            <strong>✅ Положительные аспекты:</strong>
+                            <ul>${criterion.positive_aspects.map(a => `<li>${a}</li>`).join('')}</ul>
+                        ` : ''}
+
+                        ${criterion.improvement_areas.length > 0 ? `
+                            <strong>⚠️ Что можно улучшить:</strong>
+                            <ul>${criterion.improvement_areas.map(a => `<li>${a}</li>`).join('')}</ul>
+                        ` : ''}
+
+                        <strong>Соответствие скрипту:</strong> ${formatScore(criterion.script_compliance)}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalBody').innerHTML = html;
+            document.getElementById('criteriaModal').classList.add('show');
+        }
+
+        // Закрыть модальное окно
+        function closeModal() {
+            document.getElementById('criteriaModal').classList.remove('show');
+        }
+
+        // Закрытие по клику вне модального окна
+        window.onclick = function(event) {
+            const modal = document.getElementById('criteriaModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Загрузка данных при загрузке страницы
+        window.onload = loadData;
+    </script>
+</body>
+</html>
