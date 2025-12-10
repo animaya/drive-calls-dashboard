@@ -259,6 +259,95 @@
             color: #6b7280;
         }
 
+        /* Стили для саммари звонка */
+        .call-summary-block {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .call-summary-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .call-summary-content {
+            line-height: 1.8;
+        }
+
+        .call-summary-content p {
+            margin: 10px 0;
+        }
+
+        .call-summary-label {
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        .call-summary-result {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .result-success {
+            background: #4caf50;
+        }
+
+        .result-thinking {
+            background: #ff9800;
+        }
+
+        .result-lost {
+            background: #f44336;
+        }
+
+        .drop-off-alert {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 4px solid #ffeb3b;
+        }
+
+        /* Стили для примеров фраз */
+        .examples-block {
+            background: #f0f7ff;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .examples-title {
+            font-weight: bold;
+            color: #2196f3;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .example-item {
+            background: white;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border-left: 3px solid #2196f3;
+            font-style: italic;
+            color: #333;
+            line-height: 1.6;
+        }
+
         ul {
             margin-left: 20px;
             margin-top: 5px;
@@ -560,6 +649,36 @@
             if (!data) return;
 
             let html = `<h2 style="color: #6b7280; margin: 20px 0;">Менеджер: ${data.manager}</h2>`;
+
+            // Добавляем саммари звонка
+            if (data.call_summary) {
+                const summary = data.call_summary;
+                const resultClass = summary.result === 'Успешно закрыто' ? 'result-success' :
+                                   summary.result === 'Клиент думает' ? 'result-thinking' : 'result-lost';
+
+                html += `<div class="call-summary-block">
+                    <div class="call-summary-title">📞 Саммари звонка</div>
+                    <div class="call-summary-content">
+                        <p><span class="call-summary-label">Что обсуждалось:</span><br>${summary.overview}</p>
+                        <p><span class="call-summary-label">Интересы клиента:</span><br>${summary.client_interest}</p>
+                        <p><span class="call-summary-label">Результат:</span>
+                            <span class="call-summary-result ${resultClass}">${summary.result}</span>
+                        </p>
+                        ${summary.drop_off_point ? `
+                            <div class="drop-off-alert">
+                                <strong>⚠️ Точка отвала:</strong><br>${summary.drop_off_point}
+                            </div>
+                        ` : ''}
+                        ${summary.key_moments && summary.key_moments.length > 0 ? `
+                            <p><span class="call-summary-label">Ключевые моменты:</span></p>
+                            <ul>
+                                ${summary.key_moments.map(m => `<li>${m}</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                    </div>
+                </div>`;
+            }
+
             html += `<div class="stats-grid">
                 <div class="stat-card">
                     <h3>${data.overall_score}</h3>
@@ -617,7 +736,38 @@
 
             document.getElementById('modalTitle').textContent = `Детальный анализ - ${managerName}`;
 
-            let html = `<div class="stats-grid">
+            let html = '';
+
+            // Добавляем саммари звонка
+            if (data.call_summary) {
+                const summary = data.call_summary;
+                const resultClass = summary.result === 'Успешно закрыто' ? 'result-success' :
+                                   summary.result === 'Клиент думает' ? 'result-thinking' : 'result-lost';
+
+                html += `<div class="call-summary-block">
+                    <div class="call-summary-title">📞 Саммари звонка</div>
+                    <div class="call-summary-content">
+                        <p><span class="call-summary-label">Что обсуждалось:</span><br>${summary.overview}</p>
+                        <p><span class="call-summary-label">Интересы клиента:</span><br>${summary.client_interest}</p>
+                        <p><span class="call-summary-label">Результат:</span>
+                            <span class="call-summary-result ${resultClass}">${summary.result}</span>
+                        </p>
+                        ${summary.drop_off_point ? `
+                            <div class="drop-off-alert">
+                                <strong>⚠️ Точка отвала:</strong><br>${summary.drop_off_point}
+                            </div>
+                        ` : ''}
+                        ${summary.key_moments && summary.key_moments.length > 0 ? `
+                            <p><span class="call-summary-label">Ключевые моменты:</span></p>
+                            <ul>
+                                ${summary.key_moments.map(m => `<li>${m}</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                    </div>
+                </div>`;
+            }
+
+            html += `<div class="stats-grid">
                 <div class="stat-card">
                     <h3>${data.overall_score}</h3>
                     <p>Общий балл</p>
@@ -662,7 +812,25 @@
 
                             ${criterion.improvement_areas.length > 0 ? `
                                 <strong>⚠️ Что можно улучшить:</strong>
-                                <ul>${criterion.improvement_areas.map(a => `<li>${a}</li>`).join('')}</ul>
+                                ${criterion.improvement_areas.map(area => {
+                                    // Проверяем формат: новый (объект) или старый (строка)
+                                    if (typeof area === 'object' && area.issue) {
+                                        return `
+                                            <div style="margin: 10px 0;">
+                                                <p style="font-weight: 500; margin-bottom: 8px;">${area.issue}</p>
+                                                ${area.examples && area.examples.length > 0 ? `
+                                                    <div class="examples-block">
+                                                        <div class="examples-title">💬 Конкретные примеры фраз:</div>
+                                                        ${area.examples.map(ex => `<div class="example-item">${ex}</div>`).join('')}
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                        `;
+                                    } else {
+                                        // Старый формат - просто строка
+                                        return `<li>${area}</li>`;
+                                    }
+                                }).join('')}
                             ` : ''}
 
                             <strong>Соответствие скрипту:</strong> ${formatScore(criterion.script_compliance)}
@@ -696,7 +864,23 @@
 
                         ${criterion.improvement_areas.length > 0 ? `
                             <strong>⚠️ Что можно улучшить:</strong>
-                            <ul>${criterion.improvement_areas.map(a => `<li>${a}</li>`).join('')}</ul>
+                            ${criterion.improvement_areas.map(area => {
+                                if (typeof area === 'object' && area.issue) {
+                                    return `
+                                        <div style="margin: 10px 0;">
+                                            <p style="font-weight: 500; margin-bottom: 8px;">${area.issue}</p>
+                                            ${area.examples && area.examples.length > 0 ? `
+                                                <div class="examples-block">
+                                                    <div class="examples-title">💬 Конкретные примеры фраз:</div>
+                                                    ${area.examples.map(ex => `<div class="example-item">${ex}</div>`).join('')}
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    `;
+                                } else {
+                                    return `<li>${area}</li>`;
+                                }
+                            }).join('')}
                         ` : ''}
 
                         <strong>Соответствие скрипту:</strong> ${formatScore(criterion.script_compliance)}
